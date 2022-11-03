@@ -1,0 +1,65 @@
+version: '3'
+
+services:
+  neo4j_server:
+    image: ${FIRST_BASE_IMAGE}
+    container_name: ${STACK_NAME:-defstack}_neo4j
+    ports:
+      - "7474:${NEO4J_BROWSER_PORT}"
+      - "7687:7687"
+    networks:
+      - mydefaultstack
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.neo4j_server.rule=Host(`neo4j.${DOMAIN_NAME}`)"
+      - "traefik.http.services.neo4j_server.loadbalancer.server.port=${NEO4J_BROWSER_PORT}"
+    environment:
+      - NEO4J_AUTH=${NEO4J_USER}/${NEO4J_PASSWORD}
+      - NEO4J_dbms_memory_pagecache_size=512M
+      - NEO4J_dbms_directories_import=/localimport
+      - NEO4JLABS_PLUGINS=["apoc"]
+      - NEO4J_apoc_export_file_enabled=true
+      - NEO4J_apoc_import_file_enabled=true
+      - NEO4J_apoc_import_file_use__neo4j__config=false
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
+    volumes:
+      - persistent_neo4j_data:/data
+      - persistent_neo4j_logs:/logs
+      - persistent_neo4j_import:/var/lib/neo4j/import
+      - persistent_neo4j_plugins:/plugins
+# does not work as only realtive paths are allowed
+      - type: bind
+        source: ./import
+        target: /localimport
+        read_only: true
+        bind:
+          create_host_path: true
+
+volumes:
+  persistent_neo4j_data:
+    external: true
+    name: neo4j_data
+  persistent_neo4j_logs:
+    external: true
+    name: neo4j_logs
+  persistent_neo4j_import:
+    external: true
+    name: neo4j_import
+  persistent_neo4j_plugins:
+    external: true
+    name: neo4j_plugins
+
+# volumes:
+#   persistent_neo4j_data:
+#     name: neo4j_data
+#   persistent_neo4j_logs:
+#     name: neo4j_logs
+#   persistent_neo4j_import:
+#     name: neo4j_import
+#   persistent_neo4j_plugins:
+#     name: neo4j_plugins
+
+networks:
+  mydefaultstack:
+    name: mydefaultstack
+    external: true

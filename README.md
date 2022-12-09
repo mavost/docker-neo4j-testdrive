@@ -1,4 +1,4 @@
-# A simple ToolJet test drive
+# A simple neo4j test drive
 
 *Date:* 2022-10-21  
 *Author:* MvS  
